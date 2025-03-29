@@ -7294,7 +7294,7 @@ class upgradeModel extends model
      */
     public function changeBookToCustomLib()
     {
-        $libs = $this->dao->select('id,id')->from(TABLE_DOCLIB)->where('`type`')->eq('book')->andWhere('parent')->eq(0)->fetchPairs();
+        $libs = $this->dao->select('id,id')->from(TABLE_DOCLIB)->where('`type`')->eq('book')->fetchPairs();
         foreach($libs as $libID)
         {
             $chapterModulePairs = array();
@@ -7324,6 +7324,7 @@ class upgradeModel extends model
                     $this->dao->update(TABLE_MODULE)->set('`path`')->eq(",{$path},")->where('id')->eq($moduleID)->exec();
 
                     $this->dao->update(TABLE_DOC)->set('`module`')->eq($moduleID)->set('`parent`')->eq($moduleID)->set("`path` = REPLACE(`path`, '{$chapter->path}', ',{$path},')")->set('`type`')->eq('text')->where('`parent`')->eq($id)->andWhere('`type`')->eq('article')->exec();
+                    $this->dao->update(TABLE_DOC)->set('deleted')->eq(1)->where('id')->eq($id)->exec();
                 }
             }
             $this->dao->update(TABLE_DOCLIB)->set('`type`')->eq('custom')->where('id')->eq($libID)->exec();
@@ -10706,7 +10707,7 @@ class upgradeModel extends model
 
             $this->dao->insert(TABLE_DOCCONTENT)->data($newDocContent)->exec();
             $this->dao->update(TABLE_DOC)->set('version')->eq($newDocContent->version)->where('id')->eq($docID)->exec();
-            $this->loadModel('action')->create('doc', $docID, 'convertDoc', sprintf($this->lang->doc->docConvertComment, "#$docContent->version"));
+            $this->loadModel('action')->create('doc', $docID, 'convertDoc', sprintf($this->lang->doc->docConvertComment, "#$docContent->version", '', 'system'));
         }
         elseif($docContent->type == 'doc')
         {

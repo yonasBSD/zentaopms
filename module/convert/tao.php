@@ -2562,8 +2562,6 @@ class convertTao extends convertModel
         if($type == 'project') $this->dao->dbh($this->dbh)->update(TABLE_PROJECT)->set('workflowGroup')->eq($groupID)->where('id')->eq($zentaoProjectID)->exec();
         $this->createTmpRelation('jproject', $jiraProjectID, 'zworkflowgroup', $groupID);
 
-        if(in_array($jiraProjectID, $archivedProject)) $this->workflowgroup->delete(TABLE_WORKFLOWGROUP, $groupID);
-
         return true;
     }
 
@@ -2848,6 +2846,7 @@ class convertTao extends convertModel
             if(empty($fileGroup[$objectType][$objectID])) continue;
 
             $fileList = $fileGroup[$objectType][$objectID];
+            if($objectType == 'testcase') continue;
             if($objectType == 'requirement' || $objectType == 'story' || $objectType == 'epic')
             {
                 $content = $this->dao->dbh($this->dbh)->select('`spec`')->from(TABLE_STORYSPEC)->where('`story`')->eq($objectID)->fetch('spec');
@@ -2911,18 +2910,21 @@ class convertTao extends convertModel
     {
         if(empty($content)) return '';
 
-        preg_match_all('/!(.*?)\|thumbnail!/', $content, $matches);
-        if(empty($matches[0])) return '';
-
-        foreach($matches[1] as $key => $fileName)
+        preg_match_all('/!(.*?)!/', $content, $matches);
+        if(!empty($matches[0]))
         {
-            if(empty($fileList[$fileName])) continue;
+            foreach($matches[1] as $key => $fileName)
+            {
+                $fileName = substr($fileName, 0, strpos($fileName, '|'));
+                if(empty($fileList[$fileName])) continue;
 
-            $file    = $fileList[$fileName];
-            $url     = helper::createLink('file', 'read', "t={$file->extension}&fileID={$file->id}");
-            $content = str_replace($matches[0][$key], "<img src=\"{{$file->id}.jpg}\" alt=\"{$url}\"/>", $content);
+                $file    = $fileList[$fileName];
+                $url     = helper::createLink('file', 'read', "t={$file->extension}&fileID={$file->id}");
+                $content = str_replace($matches[0][$key], "<img src=\"{{$file->id}.{$file->extension}}\" alt=\"{$url}\"/>", $content);
+            }
+            return $content;
         }
 
-        return $content;
+        return '';
     }
 }

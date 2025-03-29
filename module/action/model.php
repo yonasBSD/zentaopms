@@ -110,11 +110,6 @@ class actionModel extends model
 
         $this->loadModel('message')->send(strtolower($objectType), $objectID, $actionType, $actionID, $actor, $extra);
 
-        if(in_array($this->config->edition, array('max', 'ipd')))
-        {
-            $this->loadModel('rulequeue')->save($action);
-        }
-
         $this->saveIndex($objectType, $objectID, $actionType);
 
         $changeFunc = 'after' . ucfirst($objectType);
@@ -250,7 +245,6 @@ class actionModel extends model
                 $history = $this->file->replaceImgURL($history, 'old,new');
             }
 
-            if(strpos($extra, 'rule=') !== false) $action->extra = $extra;
             $action->comment = $this->file->setImgSize($action->comment, $this->config->action->commonImgSize);
             $action->files   = $this->file->getByObject('comment', $actionID);
             $actions[$actionID] = $action;
@@ -758,11 +752,6 @@ class actionModel extends model
         foreach($action as $key => $value)
         {
             if($key == 'history') continue;
-            if($key == 'extra' && strpos($value, 'rule=') !== false)
-            {
-                $desc = str_replace('$' . $key, '', $desc);
-                continue;
-            }
 
             /* 如果desc是数组，替换变量。 */
             /* Desc can be an array or string. */
@@ -850,6 +839,11 @@ class actionModel extends model
             list($extra) = explode('|', $extra);
             if(!empty($desc['extra'][$extra])) $actionDesc = str_replace('$extra', $desc['extra'][$extra], $desc['main']);
         }
+        if(($action->objectType == 'story' || $action->objectType == 'demand') && $action->action == 'fromboard')
+        {
+            $actionExtra = html::a(helper::createLink('board', 'view', "canvasID={$action->extra}"), $action->extra);
+            $actionDesc = str_replace('$extra', $actionExtra, $desc['main']);
+        }
 
         if($action->objectType == 'module' && strpos(',created,moved,', $action->action) !== false)
         {
@@ -868,10 +862,15 @@ class actionModel extends model
 
         if($action->objectType == 'board' && in_array($action->action, array('importstory', 'importdemand', 'importrequirement', 'importepic', 'convertdemand', 'convertepic', 'convertrequirement', 'convertstory')))
         {
-            if($action->action == 'importstory' || $action->action == 'importrequirement' || $action->action == 'convertstory' || $action->action == 'convertrequirement')
+            if($action->action == 'importstory' || $action->action == 'importrequirement' || $action->action == 'convertstory')
             {
                 $story = $this->loadModel('story')->getById((int)$action->extra);
                 $link  = helper::createLink('story', 'view', "storyID={$action->extra}");
+            }
+            if($action->action == 'convertrequirement')
+            {
+                $story = $this->loadModel('story')->getById((int)$action->extra);
+                $link  = helper::createLink('requirement', 'view', "storyID={$action->extra}");
             }
             if($action->action == 'importdemand' || $action->action == 'convertdemand')
             {
@@ -955,15 +954,6 @@ class actionModel extends model
             $item->hasRendered = true;
             $item->content     = $this->renderAction($action);
             if(!empty($action->files)) $item->files = array_values($action->files);
-
-            if(strpos($action->extra, 'rule=') !== false)
-            {
-                $extra          = $action->extra;
-                $extra          = str_replace('rule=', '', $action->extra);
-                $rules          = explode('-', $extra);
-                $ruleID         = end($rules);
-                $item->content .= sprintf($this->lang->action->byRule, "#$ruleID");
-            }
 
             if($action->objectType == 'instance' && in_array($action->action, array('adjustmemory', 'adjustcpu', 'adjustvol'))) unset($item->comment);
 

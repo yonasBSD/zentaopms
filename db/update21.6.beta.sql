@@ -1,3 +1,6 @@
+ALTER TABLE `zt_compile` CHANGE `status` `status` varchar(100) NOT NULL DEFAULT '';
+ALTER TABLE `zt_measqueue` CHANGE `status` `status` varchar(100) NOT NULL DEFAULT '';
+
 REPLACE INTO `zt_workflowaction` (`module`, `action`, `method`, `name`, `type`, `batchMode`, `extensionType`, `open`, `position`, `layout`, `show`, `order`, `buildin`, `role`, `virtual`, `conditions`, `verifications`, `hooks`, `linkages`, `js`, `css`, `toList`, `blocks`, `desc`, `status`, `vision`, `createdBy`, `createdDate`, `editedBy`, `editedDate`) VALUES
 ('feedback', 'batchcreate', 'batchcreate', '批量创建', 'batch', 'different', 'none', 'normal', 'browse', 'normal', 'direct', 0, 1, 'buildin', 0, NULL, NULL, NULL, NULL, NULL, NULL, '', NULL, NULL, 'enable', 'rnd', 'admin', '2025-03-24 14:50:45', '', NULL),
 ('feedback', 'exporttemplate', 'exporttemplate', '导出模板', 'single', 'different', 'none', 'modal', 'browse', 'normal', 'direct', 0, 1, 'buildin', 0, NULL, NULL, NULL, NULL, NULL, NULL, '', NULL, '', 'enable', 'rnd', 'admin', '2025-03-24 14:50:45', '', NULL),
@@ -16,68 +19,24 @@ UPDATE `zt_workflowfield` SET `control` = 'select', `options` = (SELECT id FROM 
 UPDATE `zt_workflowfield` SET `control` = 'select', `options` = (SELECT id FROM `zt_workflowdatasource` WHERE `code` = 'feedbacks' limit 1) WHERE `module` = 'story'       AND `field` = 'feedback';
 UPDATE `zt_workflowfield` SET `control` = 'select', `options` = (SELECT id FROM `zt_workflowdatasource` WHERE `code` = 'stories'   limit 1) WHERE `module` = 'story'       AND `field` = 'duplicateStory';
 UPDATE `zt_workflowfield` SET `control` = 'select', `options` = (SELECT id FROM `zt_workflowdatasource` WHERE `code` = 'color'     limit 1) WHERE `module` = 'requirement' AND `field` = 'color';
-UPDATE `zt_workflowfield` SET `control` = 'select', `options` = (SELECT id FROM `zt_workflowdatasource` WHERE `code` = 'bugs'      limit 1) WHERE `module` = 'requirement' AND `field` = 'fromBug';
 UPDATE `zt_workflowfield` SET `control` = 'select', `options` = (SELECT id FROM `zt_workflowdatasource` WHERE `code` = 'feedbacks' limit 1) WHERE `module` = 'requirement' AND `field` = 'feedback';
 UPDATE `zt_workflowfield` SET `control` = 'select', `options` = (SELECT id FROM `zt_workflowdatasource` WHERE `code` = 'stories'   limit 1) WHERE `module` = 'requirement' AND `field` = 'duplicateStory';
 UPDATE `zt_workflowfield` SET `control` = 'select', `options` = (SELECT id FROM `zt_workflowdatasource` WHERE `code` = 'color'     limit 1) WHERE `module` = 'epic'        AND `field` = 'color';
-UPDATE `zt_workflowfield` SET `control` = 'select', `options` = (SELECT id FROM `zt_workflowdatasource` WHERE `code` = 'bugs'      limit 1) WHERE `module` = 'epic'        AND `field` = 'fromBug';
 UPDATE `zt_workflowfield` SET `control` = 'select', `options` = (SELECT id FROM `zt_workflowdatasource` WHERE `code` = 'feedbacks' limit 1) WHERE `module` = 'epic'        AND `field` = 'feedback';
 UPDATE `zt_workflowfield` SET `control` = 'select', `options` = (SELECT id FROM `zt_workflowdatasource` WHERE `code` = 'stories'   limit 1) WHERE `module` = 'epic'        AND `field` = 'duplicateStory';
 UPDATE `zt_workflowfield` SET `control` = 'select', `options` = (SELECT id FROM `zt_workflowdatasource` WHERE `code` = 'color'     limit 1) WHERE `module` = 'bug'         AND `field` = 'color';
 UPDATE `zt_workflowfield` SET `control` = 'select', `options` = (SELECT id FROM `zt_workflowdatasource` WHERE `code` = 'color'     limit 1) WHERE `module` = 'task'        AND `field` = 'color';
 UPDATE `zt_workflowfield` SET `control` = 'select', `options` = (SELECT id FROM `zt_workflowdatasource` WHERE `code` = 'bugs'      limit 1) WHERE `module` = 'task'        AND `field` = 'fromBug';
-DELETE FROM `zt_workflowfield` WHERE `module` = 'testcase'    AND `field` = 'order';
-DELETE FROM `zt_workflowfield` WHERE `module` = 'testcase'    AND `field` = 'frequency';
-DELETE FROM `zt_workflowfield` WHERE `module` = 'product'     AND `field` = 'order';
-DELETE FROM `zt_workflowfield` WHERE `module` = 'product'     AND `field` = 'createdVersion';
-DELETE FROM `zt_workflowfield` WHERE `module` = 'story'       AND `field` = 'childStories';
-DELETE FROM `zt_workflowfield` WHERE `module` = 'story'       AND `field` = 'linkStories';
-DELETE FROM `zt_workflowfield` WHERE `module` = 'requirement' AND `field` = 'childStories';
-DELETE FROM `zt_workflowfield` WHERE `module` = 'requirement' AND `field` = 'linkStories';
-DELETE FROM `zt_workflowfield` WHERE `module` = 'epic'        AND `field` = 'childStories';
-DELETE FROM `zt_workflowfield` WHERE `module` = 'epic'        AND `field` = 'linkStories';
+UPDATE `zt_workflowfield` SET `name` = REPLACE(`name`, '版本', '代码') WHERE `module` = 'task' AND `field` = 'repo';
+DELETE FROM `zt_workflowfield` WHERE `module` = 'testcase'    AND `field` in ('order', 'frequency');
+DELETE FROM `zt_workflowfield` WHERE `module` = 'product'     AND `field` in ('order', 'createdVersion');
+DELETE FROM `zt_workflowfield` WHERE `module` = 'story'       AND `field` in ('childStories', 'linkStories');
+DELETE FROM `zt_workflowfield` WHERE `module` = 'requirement' AND `field` in ('childStories', 'linkStories', 'toBug', 'fromBug');
+DELETE FROM `zt_workflowfield` WHERE `module` = 'epic'        AND `field` in ('childStories', 'linkStories', 'toBug', 'fromBug');
 DELETE FROM `zt_workflowfield` WHERE `module` = 'bug'         AND `field` = 'storyVersion';
 DELETE FROM `zt_workflowfield` WHERE `module` = 'task'        AND `field` in ('storyVersion', 'designVersion', 'v1', 'v2', 'vision');
+DELETE FROM `zt_workflowfield` WHERE `module` = 'project'     AND `field` = 'project';
 DELETE FROM `zt_workflowfield` WHERE `module` in ('project', 'execution') AND `field` in ('budgetUnit', 'output', 'path', 'grade', 'version', 'parentVersion', 'openedVersion', 'order', 'vision', 'team');
-
-CREATE TABLE `zt_rule` (
-  `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
-  `name` varchar(255) NOT NULL,
-  `type` enum('global','group') NOT NULL DEFAULT 'global',
-  `workflowGroup` varchar(255) DEFAULT NULL,
-  `objectType` varchar(30) NOT NULL,
-  `action` varchar(30) NOT NULL,
-  `nodes` mediumtext DEFAULT NULL,
-  `method` enum('sync','async') NOT NULL DEFAULT 'sync',
-  `status` char(30) NOT NULL DEFAULT 'disable',
-  `notifyUsers` text NULL,
-  `notifyMethod` varchar(30) NULL,
-  `createdBy` varchar(30) DEFAULT NULL,
-  `createdDate` date DEFAULT NULL,
-  `lastEditedBy` varchar(30) DEFAULT NULL,
-  `lastEditedDate` date DEFAULT NULL,
-  `lastRunTime` datetime DEFAULT NULL,
-  `lastRunResult` varchar(30) NOT NULL,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-CREATE INDEX `objectType`  ON `zt_rule` (`objectType`);
-CREATE INDEX `action`  ON `zt_rule` (`action`);
-
-CREATE TABLE `zt_rulequeue` (
-  `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
-  `rule` int(8) NOT NULL,
-  `fromObject` text DEFAULT NULL,
-  `actions` longtext DEFAULT NULL,
-  `status` char(30) NOT NULL DEFAULT 'wait',
-  `log` text DEFAULT NULL,
-  `triggeredBy` varchar(30) DEFAULT NULL,
-  `triggeredDate` date DEFAULT NULL,
-  `executedTime` datetime DEFAULT NULL,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
-INSERT INTO `zt_cron` (`m`, `h`, `dom`, `mon`, `dow`, `command`, `remark`, `type`, `buildin`, `status`) VALUES
-('*/1', '*', '*', '*', '*', ' moduleName=rulequeue&methodName=run', '异步执行规则引擎', 'zentao', 1, 'normal');
 
 UPDATE `zt_workflowfield` SET `control` = 'multi-select' WHERE `module` = 'testcase' AND `field` = 'stage';
 UPDATE `zt_workflowfield` SET `control` = 'multi-select' WHERE `module` = 'bug' AND `field` = 'os';
